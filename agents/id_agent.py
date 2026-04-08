@@ -1,16 +1,7 @@
-"""
-agents/id_agent.py
-------------------
-ID Agent – extracts patient identity and insurance policy information
-from pages classified as identity_document or claim_forms.
-
-Only receives the page numbers routed to it by the Segregator.
-"""
-
 import json, os
 from openai import OpenAI
 from models import ClaimState
-from utils  import pages_to_text, pages_to_vision_msgs
+from utils import pages_to_text, pages_to_vision_msgs
 
 
 SYSTEM_PROMPT = """You are a medical document specialist extracting patient identity
@@ -50,25 +41,26 @@ def id_agent_node(state: ClaimState) -> dict:
 
     print(f"[ID Agent] Processing pages: {id_pages}")
     client = OpenAI(api_key=os.environ["OPENAI_API_KEY"])
-    pages  = state["pages"]
+    pages = state["pages"]
 
-    # Build content: images first, then text summary
     content = pages_to_vision_msgs(pages, id_pages)
-    content.append({
-        "type": "text",
-        "text": (
-            f"Pages assigned to you: {id_pages}\n\n"
-            f"Extracted text:\n{pages_to_text(pages, id_pages)}\n\n"
-            "Extract all patient identity and insurance policy information."
-        ),
-    })
+    content.append(
+        {
+            "type": "text",
+            "text": (
+                f"Pages assigned to you: {id_pages}\n\n"
+                f"Extracted text:\n{pages_to_text(pages, id_pages)}\n\n"
+                "Extract all patient identity and insurance policy information."
+            ),
+        }
+    )
 
     response = client.chat.completions.create(
         model="gpt-4o",
         max_tokens=1000,
         messages=[
             {"role": "system", "content": SYSTEM_PROMPT},
-            {"role": "user",   "content": content},
+            {"role": "user", "content": content},
         ],
     )
 
@@ -82,5 +74,13 @@ def id_agent_node(state: ClaimState) -> dict:
         print(f"[ID Agent] Parse error: {raw[:100]}")
         extracted = {"raw": raw}
 
-    print(f"[ID Agent] Done. Fields extracted: {[k for k,v in extracted.items() if v]}")
-    return {"id_result": {"status": "success", "pages_processed": id_pages, "data": extracted}}
+    print(
+        f"[ID Agent] Done. Fields extracted: {[k for k, v in extracted.items() if v]}"
+    )
+    return {
+        "id_result": {
+            "status": "success",
+            "pages_processed": id_pages,
+            "data": extracted,
+        }
+    }
