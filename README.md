@@ -357,15 +357,6 @@ No AI call needed for merging — it just reads the 3 results from state and bui
 
 ---
 
-## Cost Estimate
-
-| Pages | Model | Approx cost |
-|-------|-------|-------------|
-| 18-page sample PDF | gpt-4o | ~$0.30 – $0.50 |
-| 10-page typical claim | gpt-4o | ~$0.15 – $0.25 |
-
----
-
 ## Environment Variables
 
 | Variable | Required | Description |
@@ -376,4 +367,4 @@ No AI call needed for merging — it just reads the 3 results from state and bui
 
 ## Author
 
-Jaspreet — Assignment submission for SuperClaims AI
+Jaspreet — Assignment submission for HealthPay AI
