@@ -17,6 +17,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+
 sys.path.insert(0, os.path.dirname(__file__))
 from graph import claim_graph
 
@@ -131,14 +132,23 @@ async def ui():
     """
 
 
-# 🔥 ================= MAIN API =================
+# ================= MAIN API =================
 @app.post("/api/process", tags=["claims"])
 async def process_claim(
     claim_id: str = Form(..., description="unique Claim ID"),
     file: UploadFile = File(..., description="PDF file"),
 ):
-    filename = file.filename or ""
+    """
+    Upload a PDF claim and get structured JSON back.
 
+    **Steps performed:**
+    1. Segregator classifies every page into 1 of 9 document types
+    2. ID Agent extracts patient identity & policy info (identity_document / claim_form pages)
+    3. Discharge Agent extracts clinical data (discharge_summary pages)
+    4. Bill Agent extracts itemised charges (itemized_bill / cash_receipt pages)
+    5. Aggregator merges everything into the response JSON
+    """
+    filename = file.filename or ""
     if not filename.lower().endswith(".pdf") and file.content_type not in (
         "application/pdf",
         "application/octet-stream",
@@ -185,7 +195,6 @@ async def process_claim(
             status_code=500,
             detail={"error": str(exc), "claim_id": claim_id},
         )
-
     finally:
         try:
             os.unlink(tmp_path)
@@ -193,7 +202,6 @@ async def process_claim(
             pass
 
 
-# 🚀 ================= RUN =================
 if __name__ == "__main__":
     import uvicorn
 

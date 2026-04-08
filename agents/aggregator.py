@@ -63,5 +63,4 @@ def aggregator_node(state: ClaimState) -> dict:
     }
 
     print("[Aggregator]  Final result ready.")
-    print("now is", final)
     return {"final_result": final}

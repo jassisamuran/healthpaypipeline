@@ -36,7 +36,7 @@ def extract_pages(pdf_path: str) -> dict:
             text=text,
             image_b64=img_b64,
         )
-    print("pages", pages)
+
     doc.close()
     return pages
 
