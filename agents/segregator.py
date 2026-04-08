@@ -1,6 +1,6 @@
-import json,os
-from openai imort OpenAI
-from models import ClaimState,DocumentType
+import json, os
+from openai import OpenAI
+from models import ClaimState, DocumentType
 from utils import extract_pages
 
 
@@ -27,23 +27,24 @@ Respond ONLY with valid JSON – no markdown, no explanation:
 
 def segregator_node(state: ClaimState) -> dict:
     """LangGraph node – extracts pages and classifies each one."""
-    client=OpenAI(api_key=os.environ["OPENAI_API_KEY"])
+    client = OpenAI(api_key=os.environ["OPENAI_API_KEY"])
 
-    pages=extract_pages(state["pdf_path"])
-    total=len(pages)
+    pages = extract_pages(state["pdf_path"])
+
+    total = len(pages)
     print(f"\n[Segregator] {total} pages loaded from PDF.")
 
-    page_classifications={}
-    known_types={dt.value for dt in DocumentType}
+    page_classifications = {}
+    known_types = {dt.value for dt in DocumentType}
 
     for pn, page_data in pages.items():
         print(f"[Segregator] Classifying page {pn}/{total} …", end=" ")
-        user_content=[
+        user_content = [
             {
-                "type":"image_url",
+                "type": "image_url",
                 "image_url": {
-                    "url":f"data:image/png;base64,{page_data['image_b64']}",
-                "detail":"high",
+                    "url": f"data:image/png;base64,{page_data['image_b64']}",
+                    "detail": "high",
                 },
             },
             # Text context (helpful for text-based PDFs)
@@ -57,43 +58,46 @@ def segregator_node(state: ClaimState) -> dict:
             },
         ]
 
-        response=client.chat.completions.create(
+        response = client.chat.completions.create(
             model="gpt-4o",
             max_tokens=200,
             messages=[
-                {"role":"system","content":SYSTEM_PROMPT},
-                {"role":"user","content":user_content},
+                {"role": "system", "content": SYSTEM_PROMPT},
+                {"role": "user", "content": user_content},
             ],
         )
 
-        raw=response.choices[0].message.content.strip()
+        raw = response.choices[0].message.content.strip()
         if raw.startswith("```"):
-            raw=raw.split("```")[1]
-            raw=raw.lstrip("json").strip()
+            raw = raw.split("```")[1]
+            raw = raw.lstrip("json").strip()
 
         try:
-            result=json.loads(raw)
-            doc_type=result.get("doc_type",DocumentType.OTHER)
+            result = json.loads(raw)
+            doc_type = result.get("doc_type", DocumentType.OTHER)
             if doc_type not in known_types:
-                doc_type=DocumentType.OTHER
+                doc_type = DocumentType.OTHER
         except json.JSONDecodeError:
-            doc_type=DocumentType.OTHER
+            doc_type = DocumentType.OTHER
 
-        page_classifications[pn]=doc_type
+        page_classifications[pn] = doc_type
         print(f"-> {doc_type}")
 
-    id_pages=[
-        pn for pn, dt in page_classifications.items()
+    id_pages = [
+        pn
+        for pn, dt in page_classifications.items()
         if dt in {DocumentType.IDENTITY_DOCUMENT, DocumentType.CLAIM_FORM}
     ]
 
-    discharge_pages=[
-        pn for pn, dt in page_classifications.items()
+    discharge_pages = [
+        pn
+        for pn, dt in page_classifications.items()
         if dt == DocumentType.DISCHARGE_SUMMARY
     ]
-    bill_pages=[
-        pn for pn, dt in page_classifications.items()
-        if dt in {DocumentType.ITEMIZED_BILL,DocumentType.CASH_RECEIPT}
+    bill_pages = [
+        pn
+        for pn, dt in page_classifications.items()
+        if dt in {DocumentType.ITEMIZED_BILL, DocumentType.CASH_RECEIPT}
     ]
 
     print(f"\n[Segregator] Routing:")
@@ -103,9 +107,8 @@ def segregator_node(state: ClaimState) -> dict:
 
     return {
         "pages": pages,
-        "page_classifications":page_classifications,
-        "id_pages":id_pages,
-        "discharge_page":discharge_pages,
-        "bill_pages":bill_pages
-
+        "page_classifications": page_classifications,
+        "id_pages": id_pages,
+        "discharge_page": discharge_pages,
+        "bill_pages": bill_pages,
     }
