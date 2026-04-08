@@ -33,7 +33,6 @@ def build_graph():
     builder.add_node("bill_agent", bill_agent_node)
     builder.add_node("aggregator", aggregator_node)
 
-    # ── Edges (execution order) ───────────────────────────────────
     builder.set_entry_point("segregator")
     builder.add_edge("segregator", "id_agent")
     builder.add_edge("id_agent", "discharge_agent")
