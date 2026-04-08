@@ -5,5 +5,4 @@ langgraph==1.1.6
 langchain-core==1.2.27
 openai==2.30.0
 PyMuPDF==1.24.10
-pydantic==2.9.2
 python-dotenv==1.0.1
