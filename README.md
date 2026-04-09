@@ -359,7 +359,7 @@ No AI call needed for merging — it just reads the 3 results from state and bui
 
 ## Environment Variables
 
-| Variable | Required | Description |
+| Variable | Required | Description | 
 |----------|----------|-------------|
 | `OPENAI_API_KEY` | Yes | Your OpenAI API key from platform.openai.com |
 
